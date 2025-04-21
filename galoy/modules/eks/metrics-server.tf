@@ -5,5 +5,9 @@ resource "helm_release" "metrics_server" {
   namespace  = "kube-system"
   version = "3.11.0"
 
-  depends_on = [ aws_eks_cluster.galoy_cluster, aws_eks_node_group.galoy_node_group ]
+  depends_on = [
+    null_resource.apply_aws_auth,
+    aws_eks_cluster.galoy_cluster,
+    aws_eks_node_group.galoy_node_group
+  ]
 }

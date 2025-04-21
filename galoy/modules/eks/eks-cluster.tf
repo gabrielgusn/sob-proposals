@@ -36,29 +36,40 @@ resource "aws_iam_role" "eks_nodes_role" {
     POLICY
 }
 
+resource "aws_iam_role_policy_attachment" "eks_role_attachment" {
+    role = aws_iam_role.eks_role.name
+    policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+    depends_on = [
+        aws_iam_role.eks_role
+    ]
+}
+
 resource "aws_iam_role_policy_attachment" "eks_worker_nodes_role_attachment" {
     role = aws_iam_role.eks_nodes_role.name
     policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+    depends_on = [
+        aws_iam_role.eks_nodes_role
+    ]
 }
 
 resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
     role = aws_iam_role.eks_nodes_role.name
     policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+    depends_on = [
+        aws_iam_role.eks_nodes_role
+    ]
 }
 
-resource "aws_iam_role_policy_attachment" "eks_role_attachment" {
-    role = aws_iam_role.eks_role.name
-    policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-}
 
 resource "aws_iam_role_policy_attachment" "eks_container_registry_ro" {
   role       = aws_iam_role.eks_nodes_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  depends_on = [
+    aws_iam_role.eks_nodes_role
+  ]
 }
 
 resource "aws_eks_cluster" "galoy_cluster" {
-
-    depends_on = [ aws_iam_role_policy_attachment.eks_role_attachment ]
 
     name = "${var.cluster_name}"
     version = var.eks_version
@@ -74,14 +85,27 @@ resource "aws_eks_cluster" "galoy_cluster" {
       authentication_mode = "API"
     }
 
+    depends_on = [ 
+        aws_iam_role_policy_attachment.eks_role_attachment,
+        aws_iam_role_policy_attachment.eks_cni_policy,
+        aws_iam_role_policy_attachment.eks_container_registry_ro,
+        aws_iam_role_policy_attachment.eks_worker_nodes_role_attachment,
+        aws_vpc.cluster_vpc,
+        aws_subnet.private_subnet_az1,
+        aws_subnet.private_subnet_az2,
+        aws_route_table.cluster_prv_rt,
+        aws_route_table.cluster_pub_rt,
+        aws_iam_role.eks_role,
+        aws_iam_role.eks_nodes_role,
+        aws_route_table_association.cluster_prv_sn_az1_association,
+        aws_route_table_association.cluster_prv_sn_az2_association,
+        aws_route_table_association.cluster_pub_sn_az1_association,
+        aws_route_table_association.cluster_pub_sn_az2_association,
+    ]
+
 }
 
 resource "aws_eks_node_group" "galoy_node_group" {
-
-    depends_on = [ 
-        aws_iam_role_policy_attachment.eks_role_attachment, 
-        aws_iam_role_policy_attachment.eks_cni_policy
-     ]
 
     node_group_name = "${var.cluster_name}-general-node-group"
     version = var.eks_version
@@ -104,4 +128,23 @@ resource "aws_eks_node_group" "galoy_node_group" {
     labels = {
       role = "galoy"
     }
+
+    depends_on = [ 
+        aws_iam_role_policy_attachment.eks_role_attachment,
+        aws_iam_role_policy_attachment.eks_cni_policy,
+        aws_iam_role_policy_attachment.eks_container_registry_ro,
+        aws_iam_role_policy_attachment.eks_worker_nodes_role_attachment,
+        aws_vpc.cluster_vpc,
+        aws_subnet.private_subnet_az1,
+        aws_subnet.private_subnet_az2,
+        aws_route_table.cluster_prv_rt,
+        aws_route_table.cluster_pub_rt,
+        aws_iam_role.eks_role,
+        aws_iam_role.eks_nodes_role,
+        aws_route_table_association.cluster_prv_sn_az1_association,
+        aws_route_table_association.cluster_prv_sn_az2_association,
+        aws_route_table_association.cluster_pub_sn_az1_association,
+        aws_route_table_association.cluster_pub_sn_az2_association,
+    ]
+
 }

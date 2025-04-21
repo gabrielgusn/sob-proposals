@@ -21,6 +21,10 @@ resource "aws_subnet" "private_subnet_az1" {
         "kubernetes.io/role/internal-elb" = "1"
         "kubernetes.io/cluster/${var.cluster_name}" = "owned"
     }
+
+    depends_on = [
+        aws_vpc.cluster_vpc
+    ]
 }
 
 resource "aws_subnet" "private_subnet_az2" {
@@ -34,6 +38,10 @@ resource "aws_subnet" "private_subnet_az2" {
         "kubernetes.io/role/internal-elb" = "1"
         "kubernetes.io/cluster/${var.cluster_name}" = "owned"
     }
+
+    depends_on = [
+        aws_vpc.cluster_vpc
+    ]
 }
 
 resource "aws_subnet" "public_subnet_az1" {
@@ -47,6 +55,10 @@ resource "aws_subnet" "public_subnet_az1" {
         "kubernetes.io/cluster/${var.cluster_name}" = "owned"
         "kubernetes.io/role/elb" = 1
     }
+
+    depends_on = [
+        aws_vpc.cluster_vpc
+    ]
 }
 
 resource "aws_subnet" "public_subnet_az2" {
@@ -60,6 +72,10 @@ resource "aws_subnet" "public_subnet_az2" {
         "kubernetes.io/cluster/${var.cluster_name}" = "owned"
         "kubernetes.io/role/elb" = 1
     }
+
+    depends_on = [
+        aws_vpc.cluster_vpc
+    ]
 }
 
 
@@ -93,4 +109,8 @@ resource "aws_internet_gateway" "cluster_igw" {
     tags = {
         Name = "${var.cluster_name}-igw"
     }
+
+    depends_on = [
+        aws_vpc.cluster_vpc
+    ]
 }
